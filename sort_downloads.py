@@ -24,21 +24,29 @@ for folder_name in EXTENSIONS.keys():
 # Sort files into the corresponding folders
 for filename in os.listdir(DOWNLOADS_FOLDER):
     file_path = os.path.join(DOWNLOADS_FOLDER, filename)
+    
     if os.path.isfile(file_path):
         file_ext = os.path.splitext(filename)[1].lower()
         moved = False
+        
+        # Check predefined extensions
         for folder, extensions in EXTENSIONS.items():
             if file_ext in extensions:
                 target_folder = os.path.join(DOWNLOADS_FOLDER, folder)
-                shutil.move(file_path, target_folder)
+                shutil.move(file_path, os.path.join(target_folder, filename))
+                print(f'Moved {filename} to {folder} folder.')
                 moved = True
                 break
+        
+        # Use model prediction for image files without matching extension
         if not moved:
-            # Move uncategorized files to an "Unsorted" folder
-            unsorted_folder = os.path.join(DOWNLOADS_FOLDER, 'Unsorted')
-            if not os.path.exists(unsorted_folder):
-                os.makedirs(unsorted_folder)
-            shutil.move(file_path, unsorted_folder)
-            print(f'No specific match found for {filename}, moved to Unsorted.')
+            if file_ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                predicted_folder = predict_category(file_path)
+            else:
+                predicted_folder = 'Others'
+            
+            target_folder = os.path.join(DOWNLOADS_FOLDER, predicted_folder)
+            shutil.move(file_path, os.path.join(target_folder, filename))
+            print(f'No specific match found for {filename}, moved to {predicted_folder} folder.')
 
-print("Downloads folder sorted.")
+print("Downloads folder sorted successfully.")
